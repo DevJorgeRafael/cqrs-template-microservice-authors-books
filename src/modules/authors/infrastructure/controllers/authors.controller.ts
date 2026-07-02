@@ -8,6 +8,11 @@ import { CreateAuthorCommand } from "../../application/command/create-author/cre
 import { UpdateAuthorDto } from "../../application/dto/update-author.dto";
 import { UpdateAuthorCommand } from "../../application/command/update-author/update-author.command";
 import { DeleteAuthorCommand } from "../../application/command/delete-author/delete-author.command";
+import { GetAuthorQuery } from "../../application/query/get-author/get-author.query";
+import { GetAllAuthorsQuery } from "../../application/query/get-all-authors/get-all-authors.query";
+import { deleteAuthorDto } from "../../application/dto/delete-author.dto";
+import { GetAuthorDto } from "../../application/dto/get-author.dto";
+import { GetAllAuthorsDto } from "../../application/dto/get-all-authors.dto";
 
 @Controller()
 @UseInterceptors(KafkaResponseInterceptor)
@@ -27,17 +32,17 @@ export class AuthorsController {
     }
 
     @MessagePattern(TOPICS_AUTHORS.DELETE_AUTHOR)
-    deleteAuthor(@Payload() data) {
+    deleteAuthor(@Payload() data: deleteAuthorDto) {
         return this.commandBus.execute(new DeleteAuthorCommand(data.id));
     }
 
     @MessagePattern(TOPICS_AUTHORS.GET_AUTHOR)
-    getAuthor(@Payload() data) {
+    getAuthor(@Payload() data: GetAuthorDto) {
         return this.commandBus.execute(new GetAuthorQuery(data.id));
     }
 
     @MessagePattern(TOPICS_AUTHORS.GET_ALL_AUTHORS)
-    getAllAuthors(@Payload() data) {
-        return this.commandBus.execute(new GetAllAuthorsQuery());
+    getAllAuthors(@Payload() data: GetAllAuthorsDto) {
+        return this.commandBus.execute(new GetAllAuthorsQuery(data.page, data.limit));
     }
 }
