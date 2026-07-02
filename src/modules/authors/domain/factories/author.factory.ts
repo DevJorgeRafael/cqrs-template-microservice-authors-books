@@ -4,7 +4,7 @@ import { randomUUID } from "crypto";
 import { Author } from "../../infrastructure/entities/author.entity";
 
 @Injectable()
-export class AuthorCreatedFactory {
+export class AuthorFactory {
     create(
         firstName: string,
         lastName: string,

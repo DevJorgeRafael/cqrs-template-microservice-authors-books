@@ -27,10 +27,20 @@ export class AuthorAggregate extends AggregateRoot {
         )
     }
 
-    update(firstName: string, lastName: string, birthDate?: Date) {
-        this.setFirstName(firstName);
-        this.setLastName(lastName);
-        this.setBirthDate(birthDate);
+    update(
+        firstName?: string, 
+        lastName?: string, 
+        birthDate?: Date
+    ) {
+        if (firstName !== undefined) {
+            this.setFirstName(firstName);
+        }
+        if (lastName !== undefined) {
+            this.setLastName(lastName);
+        }
+        if (birthDate !== undefined) {
+            this.setBirthDate(birthDate);
+        }
 
         this.apply(
             new AuthorUpdatedEvent(
