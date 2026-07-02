@@ -1,0 +1,37 @@
+// ==========================================
+// DBML - Books & Authors (TypeORM Template)
+// ==========================================
+
+Table authors {
+  id uuid [pk, note: 'Primary Key (UUID)']
+  first_name varchar(100) [not null]
+  last_name varchar(100) [not null]
+  birth_date date
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+}
+
+Table books {
+  id uuid [pk, note: 'Primary Key (UUID)']
+  title varchar(255) [not null]
+  isbn varchar(13) [unique, note: 'Unique ISBN']
+  published_year int
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+}
+
+Table authors_books {
+  id uuid [pk, note: 'Surrogate Primary Key (UUID)']
+  author_id uuid [not null]
+  book_id uuid [not null]
+  assigned_at timestamp [default: `now()`]
+  
+  // Índices para búsquedas rápidas y evitar duplicidad lógica
+  indexes {
+    (author_id, book_id) [unique, name: 'idx_unique_author_book']
+  }
+}
+
+// Relaciones (Foreign Keys)
+Ref: authors_books.author_id > authors.id
+Ref: authors_books.book_id > books.id

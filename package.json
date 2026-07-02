@@ -16,7 +16,9 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
-    "migration:make": "node scripts/make-migration.js"
+    "migration:make": "node scripts/make-migration.js",
+    "migration:run": "typeorm-ts-node-commonjs migration:run -d src/common/config/database.config.ts && typeorm-ts-node-commonjs migration:run -d src/common/config/database-read.config.ts",
+    "migration:revert": "typeorm-ts-node-commonjs migration:revert -d src/common/config/database.config.ts && typeorm-ts-node-commonjs migration:revert -d src/common/config/database-read.config.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
