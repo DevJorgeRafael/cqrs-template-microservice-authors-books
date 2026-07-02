@@ -6,6 +6,8 @@ import { TOPICS_AUTHORS } from "../utils/topics.util";
 import { CreateAuthorDto } from "../../application/dto/create-author.dto";
 import { CreateAuthorCommand } from "../../application/command/create-author/create-author.command";
 import { UpdateAuthorDto } from "../../application/dto/update-author.dto";
+import { UpdateAuthorCommand } from "../../application/command/update-author/update-author.command";
+import { DeleteAuthorCommand } from "../../application/command/delete-author/delete-author.command";
 
 @Controller()
 @UseInterceptors(KafkaResponseInterceptor)

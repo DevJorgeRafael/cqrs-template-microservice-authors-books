@@ -1,6 +1,7 @@
 import { AggregateRoot } from "@nestjs/cqrs";
 import { AuthorCreatedEvent } from "../events/author-created.event";
 import { AuthorUpdatedEvent } from "../events/author-updated.event";
+import { AuthorDeletedEvent } from "../events/author-deleted.event";
 
 export class AuthorAggregate extends AggregateRoot {
     constructor(
@@ -49,6 +50,14 @@ export class AuthorAggregate extends AggregateRoot {
                 this.lastName,
                 this.updatedAt,
                 this.birthDate
+            )
+        )
+    }
+
+    delete(): void {
+        this.apply(
+            new AuthorDeletedEvent(
+                this.id
             )
         )
     }
