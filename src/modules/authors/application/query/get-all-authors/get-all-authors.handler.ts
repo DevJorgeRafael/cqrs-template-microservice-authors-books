@@ -15,11 +15,15 @@ export class getAllAuthorsHandler implements IQueryHandler<GetAllAuthorsQuery> {
 
     async execute(query: GetAllAuthorsQuery): Promise<Author[]> {
         try {
-            const { page, limit } = query;
+            const { page, limit, ...filters } = query;
             const skip = (page - 1) * limit;
             const authors = await this.authorRepository.find({
+                where: filters,
                 skip,
                 take: limit,
+                order: {
+                    createdAt: "DESC"
+                }
             });
             return authors;
         } catch (error) {
