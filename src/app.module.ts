@@ -4,6 +4,7 @@ import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { CommonModule } from './common/common.module';
 import { databaseConfig } from './common/config/database.config';
 import { databaseReadConfig } from './common/config/database-read.config';
+import { AuthorsModule } from './modules/authors/authors.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { databaseReadConfig } from './common/config/database-read.config';
         configService.getOrThrow<TypeOrmModuleOptions>('databaseRead'),
     }),
     CommonModule,
+    AuthorsModule,
   ],
   controllers: [],
   providers: [],

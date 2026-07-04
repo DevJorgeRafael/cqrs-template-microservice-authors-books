@@ -1,5 +1,5 @@
 import { Controller, UseInterceptors } from "@nestjs/common";
-import { CommandBus } from "@nestjs/cqrs";
+import { CommandBus, QueryBus } from "@nestjs/cqrs";
 import { MessagePattern, Payload } from "@nestjs/microservices";
 import { KafkaResponseInterceptor } from "src/common/interceptors/kafka-response.interceptor";
 import { TOPICS_AUTHORS } from "../utils/topics.util";
@@ -18,7 +18,8 @@ import { GetAllAuthorsDto } from "../../application/dto/get-all-authors.dto";
 @UseInterceptors(KafkaResponseInterceptor)
 export class AuthorsController {
     constructor(
-        private readonly commandBus: CommandBus
+        private readonly commandBus: CommandBus,
+        private readonly queryBus: QueryBus
     ) {}
 
     @MessagePattern(TOPICS_AUTHORS.CREATE_AUTHOR)
@@ -38,11 +39,11 @@ export class AuthorsController {
 
     @MessagePattern(TOPICS_AUTHORS.GET_AUTHOR)
     getAuthor(@Payload() data: GetAuthorDto) {
-        return this.commandBus.execute(new GetAuthorQuery(data.id));
+        return this.queryBus.execute(new GetAuthorQuery(data.id));
     }
 
     @MessagePattern(TOPICS_AUTHORS.GET_ALL_AUTHORS)
     getAllAuthors(@Payload() data: GetAllAuthorsDto) {
-        return this.commandBus.execute(new GetAllAuthorsQuery(data.page, data.limit));
+        return this.queryBus.execute(new GetAllAuthorsQuery(data.page, data.limit));
     }
 }
