@@ -10,7 +10,7 @@ import { AuthorFactory } from "src/modules/authors/domain/factories/author.facto
 export class CreateAuthorHandler implements ICommandHandler<CreateAuthorCommand> {
     private readonly loggger = new Logger(CreateAuthorCommand.name)
     constructor(
-        private readonly authorCreatedFactory: AuthorFactory,
+        private readonly authorFactory: AuthorFactory,
         @InjectRepository(Author)
         private readonly authorRepository: Repository<Author>,
         private readonly publisher: EventPublisher,
@@ -21,10 +21,10 @@ export class CreateAuthorHandler implements ICommandHandler<CreateAuthorCommand>
         
         const { firstName, lastName, birthDate } = command;
 
-        const authorAggregate = this.authorCreatedFactory.create(firstName, lastName, birthDate);
+        const authorAggregate = this.authorFactory.create(firstName, lastName, birthDate);
         authorAggregate.create();
 
-        const entity = this.authorCreatedFactory.toEntity(authorAggregate);
+        const entity = this.authorFactory.toEntity(authorAggregate);
         await this.authorRepository.save(entity);
 
         const publish = this.publisher.mergeObjectContext(authorAggregate);
