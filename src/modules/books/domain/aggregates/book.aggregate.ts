@@ -1,15 +1,16 @@
 import { AggregateRoot } from "@nestjs/cqrs";
 import { BookCreatedEvent } from "../events/book-created.event";
 import { BookDeletedEvent } from "../events/book-deleted.event";
+import { BookUpdatedEvent } from "../events/book-updated.event";
 
 export class BookAggregate extends AggregateRoot {
     constructor(
         private readonly id: string,
         private title: string,
-        private isbn: string,
-        private publishedYear: number,
         private createdAt: Date,
         private updatedAt: Date,
+        private isbn?: string,
+        private publishedYear?: number,
     ) {
         super();
     }
@@ -19,10 +20,10 @@ export class BookAggregate extends AggregateRoot {
             new BookCreatedEvent(
                 this.id,
                 this.title,
-                this.isbn,
-                this.publishedYear,
                 this.createdAt,
                 this.updatedAt,
+                this.isbn,
+                this.publishedYear
             )
         )
     }
@@ -43,13 +44,12 @@ export class BookAggregate extends AggregateRoot {
         }
 
         this.apply(
-            new BookCreatedEvent(
+            new BookUpdatedEvent(
                 this.id,
                 this.title,
-                this.isbn,
-                this.publishedYear,
-                this.createdAt,
                 this.updatedAt,
+                this.isbn,
+                this.publishedYear
             )
         )
     }
@@ -71,11 +71,11 @@ export class BookAggregate extends AggregateRoot {
         return this.title;
     }
 
-    getIsbn(): string {
+    getIsbn(): string | undefined {
         return this.isbn;
     }
 
-    getPublishedYear(): number {
+    getPublishedYear(): number | undefined {
         return this.publishedYear;
     }
 
