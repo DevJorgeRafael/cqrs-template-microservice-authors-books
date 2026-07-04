@@ -4,13 +4,13 @@ export class GetAllBooksDto {
     @IsInt()
     @Min(1)
     @IsOptional()
-    page?: number;
+    page: number;
 
     @IsInt()
     @IsOptional()
     @Min(1)
     @Max(100)
-    limit?: number;
+    limit: number;
 
     @IsString()
     @IsOptional()
