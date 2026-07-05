@@ -32,6 +32,14 @@ To enable horizontal read scaling:
 
 ---
 
+## 📊 Database Schema
+
+Below is the Entity-Relationship Diagram (ERD) representing the database schema:
+
+![Database ER Schema](docs/schema-er.png)
+
+---
+
 ## 📁 Directory Structure
 
 ```
