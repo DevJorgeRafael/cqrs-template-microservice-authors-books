@@ -18,8 +18,12 @@ export class GetAllBooksHandler implements IQueryHandler<GetAllBooksQuery> {
             const { page, limit, ...filters } = query;
             const skip = (page - 1) * limit;
 
+            const activeFilters = Object.fromEntries(
+                Object.entries(filters).filter(([_, v]) => v !== undefined)
+            );
+
             const [books, total] = await this.bookRepository.findAndCount({
-                where: filters,
+                where: activeFilters,
                 take: limit,
                 skip,
                 order: {

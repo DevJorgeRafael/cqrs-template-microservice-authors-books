@@ -28,6 +28,10 @@ export class KafkaResponseInterceptor implements NestInterceptor {
 
     return next.handle().pipe(
       map((responseData) => {
+        if (responseData && typeof responseData === 'object' && 'data' in responseData && 'meta' in responseData) {
+          const { data, meta } = responseData;
+          return ResponseProducerHelper.success(data, meta);
+        }
         const finalData = responseData === undefined ? true : responseData;
         return ResponseProducerHelper.success(finalData);
       }),

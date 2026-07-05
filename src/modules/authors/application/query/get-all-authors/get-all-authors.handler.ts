@@ -13,19 +13,32 @@ export class getAllAuthorsHandler implements IQueryHandler<GetAllAuthorsQuery> {
         private readonly authorRepository: Repository<Author>
     ) {}
 
-    async execute(query: GetAllAuthorsQuery): Promise<Author[]> {
+    async execute(query: GetAllAuthorsQuery): Promise<any> {
         try {
             const { page, limit, ...filters } = query;
             const skip = (page - 1) * limit;
-            const authors = await this.authorRepository.find({
-                where: filters,
+
+            const activeFilters = Object.fromEntries(
+                Object.entries(filters).filter(([_, v]) => v !== undefined)
+            );
+
+            const [authors, total] = await this.authorRepository.findAndCount({
+                where: activeFilters,
                 skip,
                 take: limit,
                 order: {
                     createdAt: "DESC"
                 }
             });
-            return authors;
+            return {
+                data: authors,
+                meta: {
+                    page,
+                    limit,
+                    total,
+                    totalPages: Math.ceil(total / limit),
+                },
+            };
         } catch (error) {
             this.logger.error(`Error getting all authors:`, error.stack);
             throw error;

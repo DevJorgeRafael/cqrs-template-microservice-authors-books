@@ -5,6 +5,7 @@ import { CommonModule } from './common/common.module';
 import { databaseConfig } from './common/config/database.config';
 import { databaseReadConfig } from './common/config/database-read.config';
 import { AuthorsModule } from './modules/authors/authors.module';
+import { BooksModule } from './modules/books/books.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { AuthorsModule } from './modules/authors/authors.module';
     }),
     CommonModule,
     AuthorsModule,
+    BooksModule,
   ],
   controllers: [],
   providers: [],

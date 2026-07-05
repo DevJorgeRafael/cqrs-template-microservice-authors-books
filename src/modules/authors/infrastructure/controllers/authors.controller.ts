@@ -44,6 +44,6 @@ export class AuthorsController {
 
     @MessagePattern(TOPICS_AUTHORS.GET_ALL_AUTHORS)
     getAllAuthors(@Payload() data: GetAllAuthorsDto) {
-        return this.queryBus.execute(new GetAllAuthorsQuery(data.page, data.limit));
+        return this.queryBus.execute(new GetAllAuthorsQuery(data.page, data.limit, data.firstName, data.lastName, data.birthDate));
     }
 }
