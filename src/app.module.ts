@@ -6,6 +6,7 @@ import { databaseConfig } from './common/config/database.config';
 import { databaseReadConfig } from './common/config/database-read.config';
 import { AuthorsModule } from './modules/authors/authors.module';
 import { BooksModule } from './modules/books/books.module';
+import { AuthorsBooksModule } from './modules/authors-books/authors-books.module';
 
 @Module({
   imports: [
@@ -17,18 +18,19 @@ import { BooksModule } from './modules/books/books.module';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) =>
-        configService.getOrThrow<TypeOrmModuleOptions>('database'),
+          configService.getOrThrow<TypeOrmModuleOptions>('database'),
     }),
     TypeOrmModule.forRootAsync({
       name: 'read',
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) =>
-        configService.getOrThrow<TypeOrmModuleOptions>('databaseRead'),
+          configService.getOrThrow<TypeOrmModuleOptions>('databaseRead'),
     }),
     CommonModule,
     AuthorsModule,
     BooksModule,
+    AuthorsBooksModule,
   ],
   controllers: [],
   providers: [],
