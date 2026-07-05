@@ -1,98 +1,124 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Books-Authors Microservice
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+This microservice handles the management of Authors, Books, and their intermediate many-to-many relationships (`AuthorsBooks`). It is built using NestJS, CQRS, and communicates with other services using Kafka.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+---
 
-## Description
+## 🏗️ Architecture Design
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+### 1. CQRS (Command Query Responsibility Segregation)
+The microservice implements a strict CQRS pattern using NestJS `@nestjs/cqrs` to separate write operations from read operations:
+- **Commands (Write Lifecycle)**:
+  - Invoked for write events (e.g. `CREATE`, `UPDATE`, `DELETE`).
+  - Dispatched via `CommandBus`.
+  - Execute business logic using Domain Aggregates and Factories, producing domain events (e.g., `AuthorCreatedEvent`, `AuthorsBooksCreatedEvent`).
+  - Save changes to the **Write Master Database**.
+- **Queries (Read Lifecycle)**:
+  - Invoked for read actions (e.g., paginated searching, getting by ID).
+  - Dispatched via `QueryBus`.
+  - Directly query the **Read Replica Database** to reduce load on the master node.
 
-## Project setup
+### 2. Read-Replica Synchronization (`ReadDbSyncService`)
+To enable horizontal read scaling:
+- The system connects to two database configurations: `database` (Write Database) and `databaseRead` (Read Replica Database).
+- At startup, the [ReadDbSyncService](file:///c:/projects/NestJs/template-backend/books-authors-template/src/common/services/read-db-sync.service.ts) performs an automated synchronization check:
+  - Validates and creates missing table structures, ENUM types, and secondary indexes on the Read database to match the Write database.
+  - Automatically updates any schema changes (e.g. modified column types, defaults, nullable fields).
+  - Performs initial sync and cleanups of data between databases.
+- At runtime, query handlers retrieve data from the `'read'` replica connection using:
+  ```typescript
+  @InjectRepository(Entity, 'read')
+  ```
 
-```bash
-$ pnpm install
+---
+
+## 📁 Directory Structure
+
+```
+src/
+├── common/                  # Shared filters, interceptors, and Database Syncer
+│   ├── interceptors/        # Kafka response wrapper interceptors
+│   └── services/            # ReadDbSyncService
+└── modules/                 # Application Modules (Authors, Books, Authors-Books)
+    └── [module-name]/
+        ├── application/
+        │   ├── command/     # CQRS Write Commands & Handlers
+        │   ├── dto/         # Request input validation DTOs
+        │   └── query/       # CQRS Read Queries & Handlers
+        ├── domain/          # Domain aggregates, factories, and events
+        └── infrastructure/
+            ├── controllers/ # Kafka Message pattern controllers
+            ├── entities/    # TypeORM Database entities
+            └── utils/       # Microservice Kafka topic definitions
 ```
 
-## Compile and run the project
+---
 
-```bash
-# development
-$ pnpm run start
+## 📡 Message Patterns & CQRS Mappings
 
-# watch mode
-$ pnpm run start:dev
+### ✍️ Commands (Writes)
+| Kafka Topic | DTO / Payload | Command Class | Action |
+|---|---|---|---|
+| `author.create` | `CreateAuthorDto` | `CreateAuthorCommand` | Creates a new author |
+| `author.update` | `UpdateAuthorDto` | `UpdateAuthorCommand` | Updates an author's metadata |
+| `author.delete` | `deleteAuthorDto` | `DeleteAuthorCommand` | Deletes an author |
+| `book.create` | `createBookDto` | `CreateBookCommand` | Creates a new book |
+| `book.update` | `UpdateBookDto` | `UpdateBookCommand` | Updates a book's metadata |
+| `book.delete` | `DeleteBookDto` | `DeleteBookCommand` | Deletes a book |
+| `authorBook.assign` | `AssignAuthorBookDto` | `AssignAuthorBookCommand` | Assigns an author to a book |
+| `authorBook.unassign` | `UnassignAuthorBookDto` | `UnassignAuthorBookCommand` | Unassigns an author from a book |
 
-# production mode
-$ pnpm run start:prod
-```
+### 🔍 Queries (Reads from Replica Connection)
+| Kafka Topic | Query Payload | Query Class | Action / Response |
+|---|---|---|---|
+| `author.getAll` | `GetAllAuthorsDto` | `GetAllAuthorsQuery` | List authors (paginated & filtered by `firstName`, `lastName`, `birthDate`) |
+| `author.get` | `GetAuthorDto` | `GetAuthorQuery` | Retrieve author by ID, returns loaded `books` array |
+| `book.getAll` | `GetAllBooksDto` | `GetAllBooksQuery` | List books (paginated & filtered by `title`, `isbn`, `publishedYear`) |
+| `book.get` | `GetBookDto` | `GetBookQuery` | Retrieve book by ID, returns loaded `authors` array |
 
-## Run tests
+---
 
-```bash
-# unit tests
-$ pnpm run test
+## 🛠️ Developer Guide: Implementing a New CQRS Feature
 
-# e2e tests
-$ pnpm run test:e2e
+When adding a new entity or feature:
 
-# test coverage
-$ pnpm run test:cov
-```
+1. **Entity**: Define write entities in `infrastructure/entities/`.
+2. **DTO**: Create input schemas in `application/dto/`.
+3. **Write Path (Commands)**:
+   - Create domain events in `domain/events/`.
+   - Create an Aggregate Root in `domain/aggregates/` extending `AggregateRoot`.
+   - Create a Factory in `domain/factories/` to instantiate and convert between aggregate/entity.
+   - Create Command & Handlers in `application/command/`.
+4. **Read Path (Queries)**:
+   - Create Query & Handlers in `application/query/`.
+   - Inject the `'read'` repository to retrieve data from the replica:
+     ```typescript
+     constructor(
+         @InjectRepository(Entity, 'read')
+         private readonly repository: Repository<Entity>,
+     ) {}
+     ```
+5. **Module Setup**: Register both write and read repositories in your NestJS module:
+   ```typescript
+   @Module({
+     imports: [
+       CqrsModule,
+       TypeOrmModule.forFeature([Entity]),         // Write Repository injection
+       TypeOrmModule.forFeature([Entity], 'read'), // Read Replica Repository injection
+     ],
+     ...
+   })
+   ```
 
-## Deployment
+---
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+## 🚀 Running the Project
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ pnpm install -g @nestjs/mau
-$ mau deploy
-```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+1. Install dependencies:
+   ```bash
+   pnpm install
+   ```
+2. Start in watch mode:
+   ```bash
+   pnpm run start:dev
+   ```
