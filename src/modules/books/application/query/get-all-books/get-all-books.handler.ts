@@ -9,7 +9,7 @@ import { Repository } from "typeorm";
 export class GetAllBooksHandler implements IQueryHandler<GetAllBooksQuery> {
     private readonly logger = new Logger(GetAllBooksQuery.name)
     constructor(
-        @InjectRepository(Book)
+        @InjectRepository(Book, 'read')
         private readonly bookRepository: Repository<Book>
     ) {}
 

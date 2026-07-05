@@ -9,7 +9,7 @@ import { Repository } from "typeorm";
 export class getAllAuthorsHandler implements IQueryHandler<GetAllAuthorsQuery> {
     private readonly logger = new Logger(GetAllAuthorsQuery.name);
     constructor(
-        @InjectRepository(Author)
+        @InjectRepository(Author, 'read')
         private readonly authorRepository: Repository<Author>
     ) {}
 

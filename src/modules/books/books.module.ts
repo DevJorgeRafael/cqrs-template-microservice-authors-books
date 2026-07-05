@@ -11,6 +11,7 @@ import { QueryHandlers } from './application/query';
   imports: [
     CqrsModule,
     TypeOrmModule.forFeature([Book]),
+    TypeOrmModule.forFeature([Book], 'read'),
   ],
   controllers: [BooksController],
   providers: [

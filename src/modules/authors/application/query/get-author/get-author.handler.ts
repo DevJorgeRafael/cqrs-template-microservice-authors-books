@@ -9,7 +9,7 @@ import { Logger, NotFoundException } from "@nestjs/common";
 export class GetAuthorHandler implements IQueryHandler<GetAuthorQuery> {
     private readonly logger = new Logger(GetAuthorQuery.name);
     constructor(
-        @InjectRepository(Author)
+        @InjectRepository(Author, 'read')
         private readonly authorRepository: Repository<Author>,
     ) {}
 
